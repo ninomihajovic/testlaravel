@@ -16,7 +16,7 @@
             <label for="linkedin_password" class="col-sm-3 col-form-label">LinkedIn API token</label>
             <div class="col-sm-9">
                 <div class="input-group mb-3">
-                    <input type="text" id="linkedin_token" class="form-control" placeholder="LinkedIn API token" aria-label="LinkedIn API token" aria-describedby="basic-addon2">
+                    <input type="text" id="linkedin_token" v-model="linkedin.token" class="form-control" placeholder="LinkedIn API token" aria-label="LinkedIn API token" aria-describedby="basic-addon2">
                     <div class="input-group-append">
                         <button class="btn btn-outline-secondary" type="submit">Get</button>
                     </div>
@@ -35,7 +35,7 @@
                 linkedin: {
                     email: null,
                     password: null,
-                    data: null
+                    token: null
                 }
             };
         },
@@ -45,22 +45,22 @@
                 this.saved = false;
 
                 axios.post('api/linkedin/store', this.linkedin)
-                     .then(({data}) => this.setSuccessMessage())
+                     .then(({data}) => this.setSuccessMessage(data.data))
                      .catch(({response}) => this.setErrors(response));
             },
 
             setErrors(response) {
-                // this.errors = response.data.errors;
             },
 
-            setSuccessMessage() {
+            setSuccessMessage(data) {
                 this.reset();
                 this.saved = true;
+                this.linkedin = {email: data.email, password: data.password, token: data.token};
             },
 
             reset() {
                 this.errors = [];
-                this.linkedin = {email: null, password: null, data: null};
+                // this.linkedin = {email: null, password: null, data: null};
             }
         }
     }

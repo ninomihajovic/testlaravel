@@ -14,6 +14,7 @@ class LinkedInController extends Controller
     CONST LOGIN_OUT = 'https://www.linkedin.com/m/logout/';
 
     CONST COOKIE_FILE = 'linkedin.cookie';
+    CONST TOKEN_FILE  = 'linkedin.token';
 
     /**
      * Fetch and return the linkedin api token.
@@ -22,13 +23,18 @@ class LinkedInController extends Controller
      */
     public function store(Request $linkedin)
     {
+        // Logout
+        \Storage::put(self::COOKIE_FILE, '');
+
         // Goto Login Page.
-        $html = $this->send_request(self::LOGIN_OUT);
+        // $html = $this->send_request(self::LOGIN_OUT);
+        $html = $this->send_request('https://www.linkedin.com/notifications/');
         $doc = new \DOMDocument();
         @$doc->loadHTML($html);
         $xpath = new \DomXPath($doc);
 
-        $input_elements = $xpath->query('//form[@id="login"]/input');
+        $form_login_params = [];
+        $input_elements = $xpath->query('//form[@class="login-form"]//input');
 
         foreach ($input_elements as $input) {
             $name  = $input->getAttribute('name');
@@ -47,8 +53,7 @@ class LinkedInController extends Controller
 
         // Save token file in local.
         $cookies = $this->parse_cookies();
-        //dd($cookies);
-        \Storage::put('linkedin_token', 'token=' . $cookies['leo_auth_token']);
+        \Storage::put(self::TOKEN_FILE, $cookies['leo_auth_token']);
 
         $data = new \stdClass();
         $data->email = $linkedin->input('email');
@@ -70,8 +75,8 @@ class LinkedInController extends Controller
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_COOKIEJAR => storage_path(self::COOKIE_FILE),
-            CURLOPT_COOKIEFILE => storage_path(self::COOKIE_FILE)
+            CURLOPT_COOKIEJAR => storage_path('app/'.self::COOKIE_FILE),
+            CURLOPT_COOKIEFILE => storage_path('app/'.self::COOKIE_FILE)
         ];
 
         if (!empty($post_data)) {
@@ -97,7 +102,7 @@ class LinkedInController extends Controller
 
     private function parse_cookies() {
         // read the file
-        $lines = file(storage_path(self::COOKIE_FILE));
+        $lines = file(storage_path('app/'.self::COOKIE_FILE));
         $cookies = [];
 
         // iterate over lines
